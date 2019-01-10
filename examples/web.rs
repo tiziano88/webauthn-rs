@@ -3,9 +3,11 @@
 #[macro_use]
 extern crate rocket;
 
+const INDEX_CONTENT: &str = include_str!("index.html");
+
 #[get("/")]
 fn index() -> &'static str {
-    "Hello, world!"
+    INDEX_CONTENT
 }
 
 fn main() {
