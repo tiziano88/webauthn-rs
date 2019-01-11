@@ -1,8 +1,24 @@
 [package]
-name = "webauthn-rs"
+name = "webauthn"
 version = "0.1.0"
 authors = ["Tiziano Santoro <tiziano88@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-rocket = "0.4.0"
+rocket = "0.4"
+log = "0.4"
+env_logger = "0.6"
+rand = "0.6"
+base64 = "0.10"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+sha2 = "0.8"
+serde_cbor = "0.9"
+byteorder = "1.2"
+serde_bytes = "0.10"
+
+[dependencies.rocket_contrib]
+version = "0.4"
+default-features = false
+features = ["json"]
