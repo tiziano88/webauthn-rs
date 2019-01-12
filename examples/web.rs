@@ -13,6 +13,7 @@ extern crate webauthn;
 use rocket::response::NamedFile;
 use rocket_contrib::json::Json;
 use std::sync::Mutex;
+use webauthn::requests::*;
 use webauthn::*;
 
 #[get("/")]
