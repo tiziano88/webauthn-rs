@@ -28,6 +28,39 @@ function register() {
   });
 }
 
+function login() {
+  fetch("/challenge/xxx", {method: "POST"})
+    .then(res => res.json())
+    .then(challenge => {
+      console.log("challenge");
+      console.log(challenge);
+      const req = {};
+      req.publicKey = {};
+      req.publicKey.challenge = fromBase64(challenge.publicKey.challenge);
+      req.publicKey.timeout = 6000;
+      req.publicKey.allowCredentials = challenge.publicKey.allowCredentials.map(c =>
+        {
+          c.id = fromBase64(c.id)
+          return c
+        })
+      console.log("req");
+      console.log(req);
+      return navigator.credentials.get(req)
+    .then(credentials => {
+      console.log("PublicKeyCredential Get");
+      console.log(credentials);
+      const req = {};
+      req.response = {};
+      req.response.authenticatorData = toBase64(credentials.response.authenticatorData);
+      req.response.clientDataJSON = toBase64(credentials.response.clientDataJSON);
+      req.response.signature = toBase64(credentials.response.signature);
+      return fetch("/login", {method: "POST", body: JSON.stringify(req)})
+    })
+    .catch(err => console.log(err));
+  });
+}
+
+
 function toBase64(data) {
   return btoa(String.fromCharCode.apply(null, new Uint8Array(data)))
 }

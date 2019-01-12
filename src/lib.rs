@@ -9,27 +9,20 @@ extern crate sha2;
 use byteorder::ByteOrder;
 use sha2::Digest;
 
+mod challenge;
+
 const CHALLENGE_SIZE_BYTES: usize = 32;
 
-#[derive(Clone)]
-pub struct Challenge(Vec<u8>);
-
-impl Challenge {
-    fn new(size_bytes: usize) -> Self {
-        let data = (0..size_bytes).map(|_| rand::random()).collect::<Vec<u8>>();
-        Challenge(data)
-    }
+#[derive(Debug, Clone)]
+pub struct Credential {
+    pub id: String,
 }
 
-impl std::fmt::Display for Challenge {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", base64::encode(&self.0))
-    }
-}
-
+#[derive(Debug)]
 pub struct WebAuthn {
     relying_party: String,
-    challenges: std::collections::HashMap<String, Challenge>,
+    challenges: std::collections::HashMap<String, challenge::Challenge>,
+    credentials: std::collections::HashMap<String, Vec<Credential>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -129,11 +122,27 @@ impl From<&[u8]> for AttestedCredentialData {
     }
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LoginRequest {
+    response: AuthenticatorAssertionResponse,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AuthenticatorAssertionResponse {
+    authenticator_data: String,
+    #[serde(rename = "clientDataJSON")]
+    client_data_json: String,
+    signature: String,
+}
+
 impl WebAuthn {
     pub fn new(relying_party: String) -> Self {
         WebAuthn {
             relying_party: relying_party,
             challenges: std::collections::HashMap::new(),
+            credentials: std::collections::HashMap::new(),
         }
     }
 
@@ -143,21 +152,22 @@ impl WebAuthn {
 
     // See https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API
     // https://w3c.github.io/webauthn/#registering-a-new-credential
-    pub fn generate_challenge(&mut self, username: String) -> Challenge {
-        let challenge = Challenge::new(CHALLENGE_SIZE_BYTES);
+    pub fn generate_challenge(&mut self, username: String) -> challenge::Challenge {
+        let challenge = challenge::Challenge::new(CHALLENGE_SIZE_BYTES);
         self.challenges.insert(username, challenge.clone());
         challenge
+    }
+
+    pub fn get_credentials(&self, username: String) -> Vec<Credential> {
+        self.credentials.get(&username).unwrap_or(&vec![]).to_vec()
     }
 
     pub fn register(&mut self, req: &RegisterRequest) -> bool {
         info!("req: {:?}", req);
         let decoded_client_data_json_vec =
             base64::decode(&req.response.client_data_json).expect("could not convert client data");
-        let decoded_client_data_json = String::from_utf8(decoded_client_data_json_vec.clone())
-            .expect("could not convert client data to string");
-        info!("decoded client data: {}", decoded_client_data_json);
-        let client_data: ClientData =
-            serde_json::from_str(&decoded_client_data_json).expect("could not parse client data");
+        let client_data: ClientData = serde_json::from_slice(&decoded_client_data_json_vec)
+            .expect("could not parse client data");
         info!("parsed client data: {:?}", client_data);
         // See https://w3c.github.io/webauthn/#registering-a-new-credential.
         if client_data.type_ != "webauthn.create" {
@@ -181,6 +191,24 @@ impl WebAuthn {
         info!("attestation: {:?}", attestation);
         let decoded_auth_data: DecodedAuthData = attestation.auth_data.into();
         info!("auth_data: {:?}", decoded_auth_data);
+        self.credentials.insert(
+            "xxx".to_string(),
+            vec![Credential {
+                id: req.raw_id.clone(),
+            }],
+        );
         true
+    }
+
+    // See:
+    // - https://w3c.github.io/webauthn/#verifying-assertion
+    pub fn verify(&mut self, req: &LoginRequest) -> bool {
+        info!("login request: {:?}", req);
+        let decoded_client_data_json_vec =
+            base64::decode(&req.response.client_data_json).expect("could not convert client data");
+        let client_data: ClientData = serde_json::from_slice(&decoded_client_data_json_vec)
+            .expect("could not parse client data");
+        info!("client data: {:?}", client_data);
+        false
     }
 }
