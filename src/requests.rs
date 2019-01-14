@@ -91,6 +91,7 @@ impl From<&[u8]> for AttestedCredentialData {
             aaguid: v[0..16].into(),
             credentialid_length: credentialid_length,
             credentialid: v[18..18 + credentialid_length as usize].into(),
+            // See https://w3c.github.io/webauthn/#sctn-encoded-credPubKey-examples
             //credential_public_key: serde_cbor::from_slice(public_key_cbor)
             //.expect("could not decode public key"),
         }
