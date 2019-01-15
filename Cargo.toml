@@ -3,6 +3,8 @@ name = "webauthn"
 version = "0.1.0"
 authors = ["Tiziano Santoro <tiziano88@gmail.com>"]
 edition = "2018"
+license = "MIT"
+description = "The webauthn crate provides Rocket handlers to implement a Relying Party supporting passwordless or two-factor authentication using security keys according to the Web Authentication specification."
 
 [dependencies]
 rocket = "0.4"
