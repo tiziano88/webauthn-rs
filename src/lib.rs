@@ -13,6 +13,8 @@ pub mod requests;
 
 const CHALLENGE_SIZE_BYTES: usize = 32;
 
+type UserId = String;
+
 #[derive(Debug, Clone)]
 pub struct Credential {
     pub id: String,
@@ -21,8 +23,8 @@ pub struct Credential {
 #[derive(Debug)]
 pub struct WebAuthn {
     relying_party: String,
-    challenges: std::collections::HashMap<String, challenge::Challenge>,
-    credentials: std::collections::HashMap<String, Vec<Credential>>,
+    challenges: std::collections::HashMap<UserId, challenge::Challenge>,
+    credentials: std::collections::HashMap<UserId, Vec<Credential>>,
 }
 
 impl WebAuthn {
@@ -40,14 +42,14 @@ impl WebAuthn {
 
     // See https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API
     // https://w3c.github.io/webauthn/#registering-a-new-credential
-    pub fn generate_challenge(&mut self, username: String) -> challenge::Challenge {
+    pub fn generate_challenge(&mut self, user_id: UserId) -> challenge::Challenge {
         let challenge = challenge::Challenge::new(CHALLENGE_SIZE_BYTES);
-        self.challenges.insert(username, challenge.clone());
+        self.challenges.insert(user_id, challenge.clone());
         challenge
     }
 
-    pub fn get_credentials(&self, username: String) -> Vec<Credential> {
-        self.credentials.get(&username).unwrap_or(&vec![]).to_vec()
+    pub fn get_credentials(&self, user_id: UserId) -> Vec<Credential> {
+        self.credentials.get(&user_id).unwrap_or(&vec![]).to_vec()
     }
 
     pub fn register(&mut self, req: &requests::RegisterRequest) -> bool {
