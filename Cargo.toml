@@ -5,6 +5,8 @@ authors = ["Tiziano Santoro <tiziano88@gmail.com>"]
 edition = "2018"
 license = "MIT"
 description = "The webauthn crate provides Rocket handlers to implement a Relying Party supporting passwordless or two-factor authentication using security keys according to the Web Authentication specification."
+repository = "https://github.com/tiziano88/webauthn-rs"
+keywords = ["webauthn", "web authentication", "rocket"]
 
 [dependencies]
 rocket = "0.4"
